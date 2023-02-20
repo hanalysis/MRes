@@ -5,22 +5,22 @@
 
 
 
-library(tidyverse)
-library(broom)
+````library(tidyverse)
+library(broom)```
 
 
 # Using rnorm() to generate 5 numbers from a distribution with a mean of 0 and 
 # a standard deviation of 1. We do this twice. 
 
-rnorm(5,0,1)
+```rnorm(5,0,1)
 
-rnorm(5,0,1)
+rnorm(5,0,1)```
 
 # Using set.seed() to tell R where to start the random number generation from,
 # making the code reproducible
 
-set.seed(1234)
-rnorm(5,0,1)
+```set.seed(1234)
+rnorm(5,0,1)```
 
 
 # Simulating data from a one factor between participants experiment. 

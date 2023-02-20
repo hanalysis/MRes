@@ -1,0 +1,343 @@
+## Mixed models, Bayesian statistics and Hackathon
+### Week 3: Data Simulation
+
+## Part 1: Data simulation
+
+
+
+library(tidyverse)
+library(broom)
+
+
+# Using rnorm() to generate 5 numbers from a distribution with a mean of 0 and 
+# a standard deviation of 1. We do this twice. 
+
+rnorm(5,0,1)
+
+rnorm(5,0,1)
+
+# Using set.seed() to tell R where to start the random number generation from,
+# making the code reproducible
+
+set.seed(1234)
+rnorm(5,0,1)
+
+
+# Simulating data from a one factor between participants experiment. 
+
+# Creating a sequence to correspond to participant numbers
+
+participant <- seq(1:24)
+participant
+
+# Creating conditions (fast and slow)
+
+
+condition <- c(rep("fast", times = 12), rep("slow", times = 12))
+condition
+
+
+# Simulate data using the rnorm() function, which samples from a normal distribution. 
+# you can specify the mean (1000) and SD (50) you want.
+
+set.seed(1234)
+dv <- c(rnorm(12, 1000, 50), rnorm(12, 1020, 50))
+dv
+
+# To turn these into a tibble, use cbind to bind the first three variables together
+# and then use as_tibble to convert into a tibble
+
+library(dplyr)
+
+my_data <- as_tibble(cbind(participant, condition, dv))
+my_data
+
+# Tidying
+
+
+my_tidied_data <- my_data %>%
+  mutate(condition = factor(condition),
+         dv = as.integer(dv))
+
+my_tidied_data
+
+
+# Visualisation, but can't find stat.summary() ?
+
+ggplot(my_tidied_data, aes(x = condition, y = dv, fill = condition)) + 
+  geom_violin(width = 0.25) + 
+  guides(fill  = FALSE) + 
+  labs(x= "Condition", y = "DV (ms.)") + 
+  theme_minimal()
+
+
+# Running a between-participants t-test to see if the difference
+# between the conditions is significant. Using tidy() from broom means you 
+# can store the output of the t test as a tibble.
+
+
+t.test(filter(my_tidied_data,
+              condition == "fast")$dv,
+       filter(my_tidied_data, condition == "slow")$dv,
+       paired = FALSE)
+
+
+result <- tidy(t.test(filter(my_tidied_data, condition =="fast")$dv,
+                      filter(my_tidied_data, condition == "slow")$dv,
+                      paired = FALSE))
+
+result
+
+
+# Simulating a number of datasets
+
+
+total_samples <- 10
+sample_size <- 24
+participant <- rep(1 : sample_size)
+condition <- c(rep("fast", times = sample_size/2),
+               rep("slow", times = sample_size/2))
+
+all_data <- NULL
+
+for (i in 1: total_samples) {
+  sample <- i
+  set.seed(1233 + i)
+  dv <- c(rnorm(sample_size/2, 1000,50), 
+          rnorm(sample_size/2, 1020, 50))
+  my_data <- as_tibble(cbind(participant, condition, dv, sample))
+  all_data <- rbind(my_data, all_data)
+}
+
+all_tidied_data <- all_data %>%
+  mutate(condition = factor(condition),
+         dv = as.integer(dv))
+
+
+# Visualising; averages for each dataset, split by condition
+
+
+all_tidied_data %>%
+  group_by(condition, sample) %>%
+  summarise(average = mean(dv)) %>%
+  ggplot(aes(x = condition, y = average, group = condition, 
+             label = sample)) + 
+  geom_jitter(width = 0.1, alpha = 0.5) + 
+  stat_summary(fun.data = "mean_cl_boot", colour = "blue") + 
+  geom_text(check_overlap = TRUE, nudge_x = 0.2, nudge_y = 0, 
+            colour = "black") + 
+              labs(x = "Condition", 
+                   y = "DV(ms.)") +
+              theme_minimal()
+
+
+# Simulating 100 datasets
+
+
+total_samples <- 100
+sample_size <- 24
+participant <- rep(1 : sample_size)
+condition <- c(rep("fast", times = sample_size/2),
+               rep("slow", times = sample_size/2))
+
+all_data <- NULL
+
+for (i in 1: total_samples) {
+  sample <- i
+  set.seed(1233 + i)
+  dv <- c(rnorm(sample_size/2, 1000,50), 
+          rnorm(sample_size/2, 1020, 50))
+  my_data <- as_tibble(cbind(participant, condition, dv, sample))
+  all_data <- rbind(my_data, all_data)
+}
+
+all_tidied_data <- all_data %>%
+  mutate(condition = factor(condition),
+         dv = as.integer(dv))
+
+
+all_tidied_data %>%
+  group_by(condition, sample) %>%
+  summarise(average = mean(dv)) %>%
+  ggplot(aes(x = condition, y = average, group = condition, 
+             label = sample)) + 
+  geom_jitter(width = 0.1, alpha = 0.5) + 
+  stat_summary(fun.data = "mean_cl_boot", colour = "blue") + 
+  geom_text(check_overlap = TRUE, nudge_x = 0.2, nudge_y = 0, 
+            colour = "black") + 
+  labs(x = "Condition", 
+       y = "DV(ms.)") +
+  theme_minimal()
+
+
+# run t-tests for each of the 100 datasets
+
+result <- NULL
+for (i in 1:total_samples) {
+  result <- rbind(tidy(t.test(filter(all_tidied_data,
+                                     condition == "fast" & sample == i)$dv,
+                              filter(all_tidied_data, 
+                                     condition == "slow" & sample ==i)$dv,
+                              paired = FALSE)), result)
+}
+
+result
+
+result %>%
+  filter(p.value < 0.05) %>%
+  count()
+
+
+# As only 17/100 participants have seen an effect when there is a true effect, 
+# the power is 17%  - you should be aiming for an 80% power. 
+
+
+
+
+# Task for workshop
+
+# Simulate n=200
+
+total_samples <- 200
+sample_size <- 24
+participant <- rep(1 : sample_size)
+condition <- c(rep("fast", times = sample_size/2),
+               rep("slow", times = sample_size/2))
+
+all_data <- NULL
+
+for (i in 1: total_samples) {
+  sample <- i
+  set.seed(1233+i)
+  dv <- c(rnorm(sample_size/2, 1000,50), 
+          rnorm(sample_size/2, 1020, 50))
+  my_data <- as_tibble(cbind(participant, condition, dv, sample))
+  all_data <- rbind(my_data, all_data)
+}
+
+all_tidied_data <- all_data %>%
+  mutate(condition = factor(condition),
+         dv = as.integer(dv))
+
+
+
+# Detecting a statistically sig diff
+
+
+result <- NULL
+for (i in 1:total_samples) {
+  result <- rbind(tidy(t.test(filter(all_tidied_data, 
+                                     condition == "fast" & sample == i)$dv,
+                              filter(all_tidied_data, 
+                                     condition == "slow" & sample == i)$dv,
+                              paired = FALSE)), result)
+}
+
+result
+
+
+result %>% 
+  filter(p.value < .05) %>%
+  count()
+
+
+
+# Varying the standard deviations 
+
+total_samples <- 200
+sample_size <- 24
+participant <- rep(1 : sample_size)
+condition <- c(rep("fast", times = sample_size/2),
+               rep("slow", times = sample_size/2))
+
+all_data <- NULL
+
+for (i in 1: total_samples) {
+  sample <- i
+  set.seed(1233 + i)
+  dv <- c(rnorm(sample_size/2, 1000,200), 
+          rnorm(sample_size/2, 1020, 50))
+  my_data <- as_tibble(cbind(participant, condition, dv, sample))
+  all_data <- rbind(my_data, all_data)
+}
+
+
+all_tidied_data <- all_data %>%
+  mutate(condition = factor(condition),
+         dv = as.integer(dv))
+
+
+result <- NULL
+for (i in 1:total_samples) {
+  result <- rbind(tidy(t.test(filter(all_tidied_data, 
+                                     condition == "fast" & sample == i)$dv,
+                              filter(all_tidied_data, 
+                                     condition == "slow" & sample == i)$dv,
+                              paired = FALSE)), result)
+}
+
+result
+
+
+result %>% 
+  filter(p.value < .05) %>%
+  count()
+  
+  # Cohen's 
+  # NB "pooled" means averaged, not sum of
+
+(1020-1000)/(50)
+
+
+(1020-1000)/(50)
+
+
+# Re-do for difference of 40 msec
+
+(40)/(50)
+
+
+# How many subjects do you need to keep power of 80% with this effect size (0.8)
+
+library(pwr)
+
+pwr.t.test(d = 0.8, sig.level = 0.05, power = 0.8, type = c("two.sample"))
+
+pwr.t.test(n = 25.5, sig.level = 0.05, power = 0.8, type = c("two.sample"))
+
+
+
+# Use ANOVAs rather than t tests
+
+
+
+library(afex)
+
+
+anova_model <- aov_4(dv ~ condition + (1 + condition | participant), 
+                     data = all_tidied_data)
+
+
+summary(anova_model)
+
+
+
+result <- NULL
+for (i in 1:total_samples) {
+  result <- rbind(tidy(summary(aov_4(dv ~ condition + (1 | participant), 
+                             data = all_tidied_data)), result))
+}
+
+result
+
+
+
+# Building linear regression model for the ANOVA
+
+
+model1 <- lm(condition ~ 1, data = all_tidied_data)
+
+
+all_tidied_data_2 <- all_tidied_data %>%
+  mutate(particant = as.integer(participant),
+    select(participant, condition, dv))

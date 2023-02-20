@@ -1,5 +1,3 @@
 # MRes
 
-## Mixed models, hackathon and Bayesian statistics
-
-###  Week 3: Data simulation
+All the code from MRes Experimental Psychology and Data Science.

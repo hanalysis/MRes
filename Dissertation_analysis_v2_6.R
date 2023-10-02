@@ -108,6 +108,9 @@ midus_tidy <- midus_tidy %>%
 midus_tidy[,8:33][midus_tidy[,8:33] == 98] <- 0
 midus_tidy[,8:33][midus_tidy[,8:33] == 90] <- 0
 
+# Subsetting just the word recall data
+
+midus_wordrecall <- as.data.frame(midus_tidy[,8:33])
 
 # Replacing correct words with a score of 1
 

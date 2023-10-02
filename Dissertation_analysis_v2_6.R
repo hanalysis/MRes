@@ -30,7 +30,7 @@ midus_data <- read_csv("MIDUS_Data.csv")
 
 # Tidying data ----
 
-# Renaming CTQ variables
+# Renaming variables for ease
 
 midus_tidy <- midus_data %>%
   rename(age = 'RA1PRAGE',
@@ -67,88 +67,8 @@ midus_tidy <- midus_data %>%
          CTQ_PhysicalAbuse = 'RA4QCT_PA',
          CTQ_SexualAbuse = 'RA4QCT_SA',
          CTQ_EmotionalNeglect = 'RA4QCT_EN',
-         CTQ_PhysicalNeglect = 'RA4QCT_PN')
-
-
-
-## Renaming MASQ
-
-# Creating list with correct DF names in
-
-MASQ_names <- c()
-
-for (i in 1:64){
-  MASQ_names[[i]] <- str_c("MASQ",i, sep = "_")
-}
-
-# Renaming MASQ col 83 -> 146
-
-  for (x in 83:146){
-  
-  colnames(midus_tidy)[x] = MASQ_names[x-82]
-  
-}
-
-
-# Renaming MASQ constructed variables
-
-midus_tidy <- midus_tidy %>%
-  rename(MASQ_GenDistressDepress = 'RA4QMA_D',
-         MASQ_GenDistressAnxious = 'RA4QMA_A',
-         MASQ_LossOfInterest = 'RA4QMA_LI',
-         MASQ_AnxiousArousal = 'RA4QMA_AA',
-         MASQ_HighPosAffect = 'RA4QMA_PA')
-
-
-
-# Calculating delayed word recall score 
-
-# Replacing missing / incorrect with 0 for individual scores
-
-midus_tidy[,8:33][midus_tidy[,8:33] == 98] <- 0
-midus_tidy[,8:33][midus_tidy[,8:33] == 90] <- 0
-
-# Subsetting just the word recall data
-
-midus_wordrecall <- as.data.frame(midus_tidy[,8:33])
-
-# Replacing correct words with a score of 1
-
-midus_wordrecall[midus_wordrecall > 0] <- 1
-
-# Summing score to count number of recalled words
-
-x <- rowSums(midus_wordrecall, na.rm = TRUE)
-
-# Including sum in main data frame
-
-midus_tidy <- midus_tidy %>%
-  mutate(WordRecall_calc = x)
-
-# Working out percentage of recalled words
-
-midus_tidy <- midus_tidy %>%
-  mutate(WordRecall_percent = (WordRecall_calc/15)*100)
-
-
-# Removing 98 (NA) values from calculated variables in the word recall
-
-midus_tidy[,34:35][midus_tidy[,34:35] == 98] <- NA
-
-# Making dataframe with uniquely remembered values to add to clean data
-
-WR_miduscalc <- midus_tidy %>%
-  dplyr:: select(34:35) %>%
-  rename(WR_TotalUnique = 'RA3TWLDTU',
-         WR_TotalRepeat = 'RA3TWLDTR') %>%
-  mutate(WR_TU_percent = ((WR_TotalUnique/15)*100),
-         num = c(1:3819))
-
-
-# Renaming the remainder of the columns
-
-midus_tidy <- midus_tidy %>%
-  rename(SGST_NormalCorrect = 'RA3TSTN',
+         CTQ_PhysicalNeglect = 'RA4QCT_PN',
+         SGST_NormalCorrect = 'RA3TSTN',
          SGST_NormalCorrectPercentage = 'RA3TSPN',
          SGST_NormalMedianRT = 'RA3TSMN',
          SGST_ReverseCorrect = 'RA3TSTR',
@@ -162,66 +82,46 @@ midus_tidy <- midus_tidy %>%
          Smoke = 'RA1PA39',
          Rx = 'RA4XPMD',
          OTC = 'RA4XOMD',
-         BMI = 'RA4PBMI')
+         BMI = 'RA4PBMI',
+         MASQ_GenDistressDepress = 'RA4QMA_D',
+         MASQ_GenDistressAnxious = 'RA4QMA_A',
+         MASQ_LossOfInterest = 'RA4QMA_LI',
+         MASQ_AnxiousArousal = 'RA4QMA_AA',
+         MASQ_HighPosAffect = 'RA4QMA_PA')
+
+## Renaming MASQ
+
+# Creating list with correct DF names in
+
+MASQ_names <- c()
+
+for (i in 1:64){
+  MASQ_names[[i]] <- str_c("MASQ",i, sep = "_")
+}
+
+# Renaming MASQ col 83 -> 146
+
+for (x in 83:146){
+  
+  colnames(midus_tidy)[x] = MASQ_names[x-82]
+  
+}
 
 
+## Word recall
 
-# Only selecting the columns needed
+# Removing 98 (NA) values from calculated variables in the word recall
 
-midus_tidy <- midus_tidy %>%
-  dplyr::select(MIDUSID,
-         age, sex, 
-         Smoke, 
-         SGST_NormalCorrect,
-         SGST_NormalCorrectPercentage,
-         SGST_NormalMedianRT,
-         SGST_ReverseCorrect,
-         SGST_ReverseCorrectPercentage,
-         SGST_ReverseMedianRT,
-         SGST_MeanPhoneLag,
-         CTQ_1,
-         CTQ_2,
-         CTQ_3,
-         CTQ_4,
-         CTQ_5,
-         CTQ_6,
-         CTQ_7,
-         CTQ_8,
-         CTQ_9,
-         CTQ_10,
-         CTQ_11,
-         CTQ_12,
-         CTQ_13,
-         CTQ_14,
-         CTQ_15,
-         CTQ_16,
-         CTQ_17,
-         CTQ_18,
-         CTQ_19,
-         CTQ_20,
-         CTQ_21,
-         CTQ_22,
-         CTQ_23,
-         CTQ_24,
-         CTQ_25,
-         CTQ_26,
-         CTQ_27,
-         CTQ_28,
-         CTQ_EmotionalAbuse,
-         CTQ_PhysicalAbuse,
-         CTQ_EmotionalNeglect,
-         CTQ_PhysicalNeglect,
-         CTQ_SexualAbuse,
-         83:151, 
-         IL6, 
-         TNFa,
-         CRP,
-         Num_Rx,
-         Rx,
-         OTC,
-         BMI,
-         WordRecall_calc,
-         WordRecall_percent)
+midus_tidy[,34:35][midus_tidy[,34:35] == 98] <- NA
+
+# Making dataframe with uniquely remembered values to add to clean data
+
+WR_miduscalc <- midus_tidy %>%
+  dplyr:: select(MIDUSID, 34:35) %>%
+  rename(WR_TotalUnique = 'RA3TWLDTU',
+         WR_TotalRepeat = 'RA3TWLDTR') %>%
+  mutate(WR_TU_percent = ((WR_TotalUnique/15)*100),
+         num = c(1:3819))
 
 
 
@@ -229,109 +129,69 @@ midus_tidy <- midus_tidy %>%
 
 ## Calculating the CTQ score ----
 
-CTQ_data <- midus_tidy %>%
-  dplyr::select(12:39)
-  
-CTQ_reversecode <- CTQ_data %>%
-  dplyr::select(2, 5, 7, 13, 19, 26, 28)
-
-CTQ_data <- CTQ_data %>%
-  dplyr::select(1, 3, 4, 6, 8:12, 14:18, 20:25, 27)
-
-
 # Reverse coding the appropriate columns
 
-# Second question
+midus_tidy <- midus_tidy %>%
+  mutate(CTQ_2 = recode(CTQ_2, 1 == 5,
+                        2 == 4,
+                        4 == 2, 
+                        5 == 1),
+         CTQ_5 = recode(CTQ_5, 1 == 5,
+                        2 == 4,
+                        4 == 2, 
+                        5 == 1),
+         CTQ_7 = recode(CTQ_7, 1 == 5,
+                        2 == 4,
+                        4 == 2, 
+                        5 == 1),
+         CTQ_13 = recode(CTQ_13, 1 == 5,
+                        2 == 4,
+                        4 == 2, 
+                        5 == 1),
+         CTQ_19 = recode(CTQ_19, 1 == 5,
+                        2 == 4,
+                        4 == 2, 
+                        5 == 1),
+         CTQ_26 = recode(CTQ_26, 1 == 5,
+                        2 == 4,
+                        4 == 2, 
+                        5 == 1),
+         CTQ_28 = recode(CTQ_28, 1 == 5,
+                        2 == 4,
+                        4 == 2, 
+                        5 == 1),
+         CTQ_Scored = CTQ_1 + 
+           CTQ_2 + CTQ_3 + CTQ_4 + 
+           CTQ_5 + CTQ_6 + CTQ_7 + 
+           CTQ_8 + CTQ_9 + CTQ_10 +
+           CTQ_11 + CTQ_12 + CTQ_13 + 
+           CTQ_14 + CTQ_15 + CTQ_16 + 
+           CTQ_17 + CTQ_18 + CTQ_19 + 
+           CTQ_20 + CTQ_21 + CTQ_22 + 
+           CTQ_23 + CTQ_24 + CTQ_25 + 
+           CTQ_26 + CTQ_27 + CTQ_28)
 
-CTQ_reversecode$CTQ_2[CTQ_reversecode$CTQ_2=="1"] <- "5"
-CTQ_reversecode$CTQ_2[CTQ_reversecode$CTQ_2=="2"] <- "4"
-CTQ_reversecode$CTQ_2[CTQ_reversecode$CTQ_2=="4"] <- "2"
-CTQ_reversecode$CTQ_2[CTQ_reversecode$CTQ_2=="5"] <- "1"
+# Joining the calculated WR score
 
+midus_tidy <- full_join(midus_tidy, WR_miduscalc, by = 'MIDUSID')
 
-# Fifth question
+## Removing lag from Stop and Go RT ----
 
-CTQ_reversecode$CTQ_5[CTQ_reversecode$CTQ_5=="1"] <- "5"
-CTQ_reversecode$CTQ_5[CTQ_reversecode$CTQ_5=="2"] <- "4"
-CTQ_reversecode$CTQ_5[CTQ_reversecode$CTQ_5=="4"] <- "2"
-CTQ_reversecode$CTQ_5[CTQ_reversecode$CTQ_5=="5"] <- "1"
+# Replacing 99 with 0 as this represents landline use to fill in the survey,
+# Which was not adjusted for due to negligible time delays
 
+midus_tidy$SGST_MeanPhoneLag[midus_tidy$SGST_MeanPhoneLag==99] <- 0
 
-# Seventh question
+# Changing mean phone lag to numeric (from character)
 
-CTQ_reversecode$CTQ_7[CTQ_reversecode$CTQ_7=="1"] <- "5"
-CTQ_reversecode$CTQ_7[CTQ_reversecode$CTQ_7=="2"] <- "4"
-CTQ_reversecode$CTQ_7[CTQ_reversecode$CTQ_7=="4"] <- "2"
-CTQ_reversecode$CTQ_7[CTQ_reversecode$CTQ_7=="5"] <- "1"
+midus_tidy <- midus_tidy %>%
+  mutate(SGST_MeanPhoneLag = as.numeric(SGST_MeanPhoneLag)) %>%
+  filter(SGST_MeanPhoneLag < 98)
 
-# Thirteenth question
+midus_tidy <- midus_tidy %>%
+  mutate(SGST_NormalMedianRT = (SGST_NormalMedianRT - SGST_MeanPhoneLag),
+         SGST_ReverseMedianRT = (SGST_ReverseMedianRT - SGST_MeanPhoneLag))
 
-CTQ_reversecode$CTQ_13[CTQ_reversecode$CTQ_13=="1"] <- "5"
-CTQ_reversecode$CTQ_13[CTQ_reversecode$CTQ_13=="2"] <- "4"
-CTQ_reversecode$CTQ_13[CTQ_reversecode$CTQ_13=="4"] <- "2"
-CTQ_reversecode$CTQ_13[CTQ_reversecode$CTQ_13=="5"] <- "1"
-
-# Nineteenth question
-
-CTQ_reversecode$CTQ_19[CTQ_reversecode$CTQ_19=="1"] <- "5"
-CTQ_reversecode$CTQ_19[CTQ_reversecode$CTQ_19=="2"] <- "4"
-CTQ_reversecode$CTQ_19[CTQ_reversecode$CTQ_19=="4"] <- "2"
-CTQ_reversecode$CTQ_19[CTQ_reversecode$CTQ_19=="5"] <- "1"
-
-# Twenty-sixth question
-
-CTQ_reversecode$CTQ_26[CTQ_reversecode$CTQ_26=="1"] <- "5"
-CTQ_reversecode$CTQ_26[CTQ_reversecode$CTQ_26=="2"] <- "4"
-CTQ_reversecode$CTQ_26[CTQ_reversecode$CTQ_26=="4"] <- "2"
-CTQ_reversecode$CTQ_26[CTQ_reversecode$CTQ_26=="5"] <- "1"
-
-# Twenty-eighth question
-
-CTQ_reversecode$CTQ_28[CTQ_reversecode$CTQ_28=="1"] <- "5"
-CTQ_reversecode$CTQ_28[CTQ_reversecode$CTQ_28=="2"] <- "4"
-CTQ_reversecode$CTQ_28[CTQ_reversecode$CTQ_28=="4"] <- "2"
-CTQ_reversecode$CTQ_28[CTQ_reversecode$CTQ_28=="5"] <- "1"
-
-
-# Making columns numeric
-
-CTQ_reversecode <- CTQ_reversecode %>%
-  mutate(num = c(1:3819)) %>%
-  mutate(CTQ_2 = as.numeric(CTQ_2),
-         CTQ_5 = as.numeric(CTQ_5),
-         CTQ_7 = as.numeric(CTQ_7),
-         CTQ_13 = as.numeric(CTQ_13),
-         CTQ_19 = as.numeric(CTQ_19),
-         CTQ_26 = as.numeric(CTQ_26),
-         CTQ_28 = as.numeric(CTQ_28))
-
-CTQ_data <- CTQ_data %>%
-  mutate(num = c(1:3819))
-
-
-## Joining datasets together -----
-
-CTQ_tidy <- full_join(CTQ_reversecode, CTQ_data, by = 'num')
-
-CTQ_forscoring <- CTQ_tidy[-8]
-
-CTQ_Scored <- rowSums(CTQ_forscoring)
-
-CTQ_tidy <- CTQ_tidy %>%
-  mutate(CTQ_Scored = CTQ_Scored)
-
-# Removing reverse-coded items from midus
-
-midus_merge <- midus_tidy %>%
-  dplyr::select(1:11,
-         40:122)
-
-midus_merge <- midus_merge %>%
-  mutate(num = c(1:3819))
-
-midus_tidy <- full_join(CTQ_tidy, midus_merge, by = 'num')
-
-midus_tidy <- full_join(midus_tidy, WR_miduscalc, by = 'num')
 
 
 ## Anhedonic depression subscale from MASQ ----
@@ -341,18 +201,18 @@ midus_tidy <- full_join(midus_tidy, WR_miduscalc, by = 'num')
 
 midus_tidy <- midus_tidy %>%
   mutate(MASQ_AD = (MASQ_18 + 
-                     MASQ_25 + 
+                    MASQ_25 + 
                     MASQ_33 + 
                     MASQ_41 + 
-                     MASQ_50 + 
-                     MASQ_51 + 
-                     MASQ_57 + 
-                     MASQ_61 + 
-                     84 - 
-                     (MASQ_3 + MASQ_7 + MASQ_10 + 
-                        MASQ_15 + MASQ_22 + MASQ_27 + 
-                        MASQ_39 + MASQ_43 + MASQ_47 + MASQ_49 + 
-                        MASQ_53 + MASQ_56 + MASQ_58 + MASQ_60)))
+                    MASQ_50 + 
+                    MASQ_51 + 
+                    MASQ_57 + 
+                    MASQ_61 + 
+                    84 - 
+                      (MASQ_3 + MASQ_7 + MASQ_10 + 
+                      MASQ_15 + MASQ_22 + MASQ_27 + 
+                      MASQ_39 + MASQ_43 + MASQ_47 + MASQ_49 + 
+                      MASQ_53 + MASQ_56 + MASQ_58 + MASQ_60)))
 
 
 #_______________________________________________________________________________
@@ -369,19 +229,17 @@ midus_clean <- midus_tidy %>%
          Rx != 1)
 
 
-# Visualising missing data and removing observations with missing data
+# Removing missing data 
 
-vis_miss(midus_clean)
+midus_clean <- na.omit(midus_clean) %>% # Removing data already coded as missing
+  filter(CRP < 99) %>% # Removes data missing from inflammatory markers
+  filter(SGST_NormalMedianRT < 98, 
+         SGST_ReverseMedianRT < 98) %>% # Removes missing data from SGST
+  filter(CTQ_SexualAbuse < 98,
+         SGST_NormalCorrectPercentage < 8)
+  
 
-
-midus_clean <- na.omit(midus_clean)
-
-vis_miss(midus_clean)
-
-# Data with NA values removed
-
-midus_clean <- midus_clean %>%
-  filter(CRP < 99)
+write.xlsx(midus_clean,file = "Midus_clean.xlsx",colNames = TRUE)
 
 
 ### Grouping BDI score
@@ -421,30 +279,6 @@ MIDUS_grouped <- MIDUS_grouped %>%
                      MASQ_AD < 59 & CTQ_Scored >= 48 ~ "2",
                      MASQ_AD >= 59 & CTQ_Scored < 48 ~ "3",
                      MASQ_AD >= 59 & CTQ_Scored >= 48 ~ "4"))
-
-
-
-## Removing lag from Stop and Go RT ----
-
-# Removing none / missing data from the Stop and Go Task
-
-SGST_data <- midus_clean %>%
-  filter(SGST_NormalMedianRT < 98, 
-         SGST_ReverseMedianRT <98)
-
-# Replacing 99 with 0 as this represents landline use to fill in the survey,
-# Which was not adjusted for due to negligible time delays
-
-SGST_data$SGST_MeanPhoneLag[SGST_data$SGST_MeanPhoneLag==99] <- 0
-
-# Changing mean phone lag to numeric (from character)
-
-SGST_data <- SGST_data %>%
-  mutate(SGST_MeanPhoneLag = as.numeric(SGST_MeanPhoneLag))
-
-SGST_data <- SGST_data %>%
-  mutate(SGST_NormalMedianRT = (SGST_NormalMedianRT - SGST_MeanPhoneLag),
-         SGST_ReverseMedianRT = (SGST_ReverseMedianRT - SGST_MeanPhoneLag))
 
 
 #_______________________________________________________________________________
@@ -497,7 +331,7 @@ other <- midus_clean %>%
 
 # Stop and Go summary statistics
 
-SGST_SummaryStats <- SGST_data %>%
+SGST_SummaryStats <- midus_clean %>%
   summarise("Stop and Go, percentage of correct responses in congruent condition, Mean" = 
               mean(SGST_NormalCorrectPercentage),
             "Stop and Go, percentage of correct responses in congruent condition, SD" = 
@@ -581,21 +415,6 @@ vis_1 <- midus_clean %>%
   theme_classic()
 
 vis_1
-
-
-# Correlation plot
- 
-corr_data <- cor(midus_clean %>%
-                   dplyr::select(CTQ_Scored, BMI, TNFa, CRP, IL6, MASQ_GenDistressDepress, 
-         SGST_NormalCorrectPercentage, WordRecall_percent, MASQ_AD) %>%
-  rename(CTQ = "CTQ_Scored",
-         Dep = "MASQ_GenDistressDepress",
-         Inhibition = "SGST_NormalCorrectPercentage",
-         Recall = "WordRecall_percent"))
-
-correlation_vis <- corrplot(corr_data, method = "number")
-
-correlation_vis
 
 
 # Correlation plot for CTQ subscales
@@ -702,7 +521,7 @@ inf_LM_CTQ
 
 
 SGST_CTQSub_Vis <- ggplot(aes(x = SGST_NormalMedianRT),
-                          data = SGST_data) + 
+                          data = midus_clean) + 
   geom_smooth(aes(y = CTQ_PhysicalAbuse, color = "Physical abuse"), linewidth = 1.5, show.legend = FALSE, se = FALSE) + 
   geom_smooth(aes(y = CTQ_EmotionalAbuse, color = "Emotional abuse"), linewidth = 1.5, show.legend = FALSE, linetype = "dotted", se = FALSE) + 
   geom_smooth(aes(y = CTQ_PhysicalNeglect, color = "Physical neglect"), linewidth = 1.5, show.legend = FALSE, linetype = "dotted", se = FALSE) + 
@@ -813,7 +632,7 @@ vif(Cog_CTQ_Sub_Recall)
 ## Stop and go task_____________________________________________________________
 
 Cog_CTQ_SGST_Reverse <- lm(SGST_ReverseCorrect ~ CTQ_Scored, 
-                           data = SGST_data)
+                           data = midus_clean)
 
 
 Cog_CTQ_Sub_SGST_Reverse <- lm(SGST_ReverseCorrect ~ CTQ_EmotionalAbuse + 
@@ -821,7 +640,7 @@ Cog_CTQ_Sub_SGST_Reverse <- lm(SGST_ReverseCorrect ~ CTQ_EmotionalAbuse +
                            CTQ_PhysicalAbuse + 
                            CTQ_PhysicalNeglect + 
                            CTQ_SexualAbuse, 
-                         data = SGST_data)
+                         data = midus_clean)
 
 summary(Cog_CTQ_SGST_Reverse)
 # p = 0.5704, F = 0.3234 on 1 and 155 df, adj R squared = -0.004356
@@ -834,13 +653,13 @@ vif(Cog_CTQ_Sub_SGST_Reverse) # Checking variance inflation score
 ### All VIF below 3
 
 
-SGST_null <- lm(SGST_ReverseCorrect ~ 1, data = SGST_data) # Null model for stop and go reverse correct
+SGST_null <- lm(SGST_ReverseCorrect ~ 1, data = midus_clean) # Null model for stop and go reverse correct
 
 
 # Linear regression just with emotional abuse
 
 Cog_CTQ_SGST_Reverse_EA <- lm(SGST_ReverseCorrect ~ CTQ_EmotionalAbuse, 
-                              data =SGST_data)
+                              data = midus_clean)
 
 summary(Cog_CTQ_SGST_Reverse_EA) 
 # p = 0.375, F = 0.7909, on 1 and 165, R sqr = 0.005077
@@ -855,7 +674,7 @@ summary(Cog_CTQ_SGST_Reverse_EA)
 # REVERSE
 
 Cog_CTQ_SGST_ReverseRT <- lm(SGST_ReverseMedianRT ~ CTQ_Scored, 
-                           data = SGST_data)
+                           data = midus_clean)
 
 summary(Cog_CTQ_SGST_ReverseRT)
 # p = 0.0556, F = 3.72 on 1 and 155, adj R squared = 0.01713
@@ -866,7 +685,7 @@ Cog_CTQ_Sub_SGST_ReverseRT <- lm(SGST_ReverseMedianRT ~ CTQ_EmotionalAbuse +
                                  CTQ_PhysicalAbuse+ 
                                  CTQ_PhysicalNeglect + 
                                  CTQ_SexualAbuse, 
-                               data = SGST_data)
+                               data = midus_clean)
 
 
 summary(Cog_CTQ_Sub_SGST_ReverseRT)
@@ -880,14 +699,14 @@ vif(Cog_CTQ_Sub_SGST_ReverseRT)
 # NORMAL
 
 Cog_CTQ_SGST_NormalRT <- lm(SGST_NormalMedianRT ~ CTQ_Scored, 
-                             data = SGST_data)
+                             data = midus_clean)
 
 summary(Cog_CTQ_SGST_NormalRT)
 # p = 0.0389, R squared = 0.02095, F = 4.339 on 1 and 155
 
 ggplot(aes(x = CTQ_Scored,
            y = SGST_ReverseMedianRT),
-       data = SGST_data) + 
+       data = midus_clean) + 
   geom_point() + 
   geom_smooth(se = FALSE) + 
   theme_minimal() 
@@ -897,7 +716,7 @@ Cog_CTQ_Sub_SGST_NormalRT <- lm(SGST_NormalMedianRT ~ CTQ_EmotionalAbuse +
                                    CTQ_PhysicalAbuse + 
                                    CTQ_PhysicalNeglect + 
                                    CTQ_SexualAbuse, 
-                                 data = SGST_data)
+                                 data = midus_clean)
 
 summary(Cog_CTQ_Sub_SGST_NormalRT)
 # p = 0.1697, F = 1.577 on 5 and 151, adj R squared = 0.01817
@@ -907,7 +726,7 @@ summary(Cog_CTQ_Sub_SGST_NormalRT)
 # Simple linear regression for just PA
 
 SGST_NormalRT_PA <- lm(SGST_NormalMedianRT ~ CTQ_PhysicalAbuse,
-                       data = SGST_data)
+                       data = midus_clean)
 
 summary(SGST_NormalRT_PA)
 # p = 0.007003, F = 7.47 on 1 and 155 df, adj R squared = 0.03982
@@ -915,7 +734,7 @@ summary(SGST_NormalRT_PA)
 # Null model
 
 SGST_NormalRT_null <- lm(SGST_NormalMedianRT ~ 1,
-                         data = SGST_data)
+                         data = midus_clean)
 
 
 # ANOVA comparing null model to PA
@@ -941,7 +760,7 @@ summary(Cog_MASQ_Recall)
 ## Stop and go task
 
 Cog_MASQ_SGST_Reverse <- lm(SGST_ReverseCorrectPercentage ~ MASQ_AD, 
-                           data = SGST_data)
+                           data = midus_clean)
 
 
 summary(Cog_MASQ_SGST_Reverse)
@@ -953,7 +772,7 @@ summary(Cog_MASQ_SGST_Reverse)
 # Reverse condition
 
 Cog_MASQAD_SGST_ReverseRT <- lm(SGST_ReverseMedianRT ~ MASQ_AD, 
-                             data = SGST_data)
+                             data = midus_clean)
 
 
 summary(Cog_MASQAD_SGST_ReverseRT)
@@ -963,7 +782,7 @@ summary(Cog_MASQAD_SGST_ReverseRT)
 # Normal condition
 
 Cog_MASQAD_SGST_NormalRT <- lm(SGST_NormalMedianRT ~ MASQ_AD, 
-                                data = SGST_data)
+                                data = midus_clean)
 
 
 summary(Cog_MASQAD_SGST_NormalRT)
@@ -987,7 +806,7 @@ summary(Cog_MASQDD_Recall)
 ## Stop and go task
 
 Cog_MASQDD_SGST_Reverse <- lm(SGST_ReverseCorrectPercentage ~ MASQ_GenDistressDepress, 
-                            data = SGST_data)
+                            data = midus_clean)
 
 
 summary(Cog_MASQDD_SGST_Reverse)
@@ -999,7 +818,7 @@ summary(Cog_MASQDD_SGST_Reverse)
 # Reverse
 
 Cog_MASQ_DDSGST_ReverseRT <- lm(SGST_ReverseMedianRT ~ MASQ_GenDistressDepress, 
-                              data = SGST_data)
+                              data = midus_clean)
 
 
 summary(Cog_MASQ_DDSGST_ReverseRT)
@@ -1009,7 +828,7 @@ summary(Cog_MASQ_DDSGST_ReverseRT)
 # Normal
 
 Cog_MASQ_DDSGST_NormalRT <- lm(SGST_NormalMedianRT ~ MASQ_GenDistressDepress, 
-                                data = SGST_data)
+                                data = midus_clean)
 
 
 summary(Cog_MASQ_DDSGST_NormalRT)
@@ -1167,7 +986,7 @@ summary(inflammation_SGST)
 # Adding into stop and go model
 
 CTQ_SGST_ReverseCorrect_IL6 <- lm(SGST_ReverseCorrect ~ CTQ_PhysicalNeglect + 
-                                    CTQ_PhysicalAbuse + IL6, data = SGST_data)
+                                    CTQ_PhysicalAbuse + IL6, data = midus_clean)
 
 
 summary(CTQ_SGST_ReverseCorrect_IL6)
@@ -1181,7 +1000,7 @@ summary(CTQ_SGST_ReverseCorrect_IL6)
 # Stop and Go Task (reaction time)______________________________________________
 
 SGST_NormalRT_PA_BMI <- lm(SGST_NormalMedianRT ~ CTQ_PhysicalAbuse + BMI, 
-                           data = SGST_data)
+                           data = midus_clean)
 
 summary(SGST_NormalRT_PA_BMI)
 # p = 0.00934, F = 4.848 on 2 and 154, adjusted R squared = 0.047
@@ -1422,8 +1241,8 @@ emmeans(mixed_model_IL6,pairwise ~ MASQ_AD_Group*CTQ_Group)
 # Stop and go task
 
 mixed_model_SGST <- lmer(SGST_ReverseCorrectPercentage ~ MASQ_AD_Group * CTQ_Group + 
-                           (1 + MASQ_AD_Group + CTQ_Group | age) + 
-                           (1 + MASQ_AD_Group + CTQ_Group | BMI_Group), 
+                           (1  | age) + 
+                           (1 | BMI_Group), 
                          data = MIDUS_grouped)
 
 summary(mixed_model_SGST)

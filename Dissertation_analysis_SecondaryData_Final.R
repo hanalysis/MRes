@@ -355,7 +355,7 @@ other <- midus_clean %>%
   filter(sex == 3)
 
 98/146
-69/167
+69/146
 
 
 
